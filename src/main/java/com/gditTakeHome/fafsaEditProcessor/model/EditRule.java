@@ -7,4 +7,8 @@ public interface EditRule {
     RuleResult apply(ApplicationRequest application);
     String getRuleId();
     Severity getSeverity();
+
+    default String getRuleName() {
+        return getClass().getSimpleName();
+    }
 }

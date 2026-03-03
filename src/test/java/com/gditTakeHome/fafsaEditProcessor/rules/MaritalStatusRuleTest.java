@@ -3,6 +3,7 @@ package com.gditTakeHome.fafsaEditProcessor.rules;
 import com.gditTakeHome.fafsaEditProcessor.dto.ApplicationRequest;
 import com.gditTakeHome.fafsaEditProcessor.dto.RuleResult;
 import com.gditTakeHome.fafsaEditProcessor.dto.SpouseInfo;
+import com.gditTakeHome.fafsaEditProcessor.model.MaritalStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -20,7 +21,7 @@ class MaritalStatusRuleTest {
     @Test
     void fails_whenMarriedAndNoSpouseInfo() {
         ApplicationRequest request = ApplicationRequest.builder()
-                .maritalStatus("married")
+                .maritalStatus(MaritalStatus.MARRIED)
                 .build();
         RuleResult result = rule.apply(request);
         assertThat(result.isPassed()).isFalse();
@@ -30,7 +31,7 @@ class MaritalStatusRuleTest {
     @Test
     void fails_whenMarriedAndSpouseInfoMissingSsn() {
         ApplicationRequest request = ApplicationRequest.builder()
-                .maritalStatus("married")
+                .maritalStatus(MaritalStatus.MARRIED)
                 .spouseInfo(SpouseInfo.builder().firstName("John").lastName("Smith").build())
                 .build();
         RuleResult result = rule.apply(request);
@@ -40,7 +41,7 @@ class MaritalStatusRuleTest {
     @Test
     void passes_whenMarriedAndSpouseInfoComplete() {
         ApplicationRequest request = ApplicationRequest.builder()
-                .maritalStatus("married")
+                .maritalStatus(MaritalStatus.MARRIED)
                 .spouseInfo(SpouseInfo.builder()
                         .firstName("John")
                         .lastName("Smith")
@@ -54,7 +55,7 @@ class MaritalStatusRuleTest {
     @Test
     void passes_whenSingleAndNoSpouseInfo() {
         ApplicationRequest request = ApplicationRequest.builder()
-                .maritalStatus("single")
+                .maritalStatus(MaritalStatus.SINGLE)
                 .build();
         RuleResult result = rule.apply(request);
         assertThat(result.isPassed()).isTrue();

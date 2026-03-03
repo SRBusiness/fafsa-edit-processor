@@ -4,6 +4,8 @@ import com.gditTakeHome.fafsaEditProcessor.dto.ApplicationRequest;
 import com.gditTakeHome.fafsaEditProcessor.dto.Household;
 import com.gditTakeHome.fafsaEditProcessor.dto.Income;
 import com.gditTakeHome.fafsaEditProcessor.dto.StudentInfo;
+import com.gditTakeHome.fafsaEditProcessor.model.DependencyStatus;
+import com.gditTakeHome.fafsaEditProcessor.model.MaritalStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,8 +48,8 @@ class ApplicationControllerTest {
                         .ssn("123456789")
                         .dateOfBirth(LocalDate.of(2003, 5, 15))
                         .build())
-                .dependencyStatus("dependent")
-                .maritalStatus("single")
+                .dependencyStatus(DependencyStatus.DEPENDENT)
+                .maritalStatus(MaritalStatus.SINGLE)
                 .household(Household.builder().numberInHousehold(4).numberInCollege(1).build())
                 .income(Income.builder()
                         .studentIncome(BigDecimal.valueOf(5000))
@@ -74,8 +76,8 @@ class ApplicationControllerTest {
                         .ssn("BADSSN")
                         .dateOfBirth(LocalDate.now().minusYears(10))
                         .build())
-                .dependencyStatus("dependent")
-                .maritalStatus("single")
+                .dependencyStatus(DependencyStatus.DEPENDENT)
+                .maritalStatus(MaritalStatus.SINGLE)
                 .household(Household.builder().numberInHousehold(2).numberInCollege(1).build())
                 .income(Income.builder()
                         .studentIncome(BigDecimal.valueOf(5000))

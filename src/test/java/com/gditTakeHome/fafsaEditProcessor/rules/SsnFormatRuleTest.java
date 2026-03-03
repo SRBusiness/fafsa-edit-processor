@@ -24,8 +24,20 @@ class SsnFormatRuleTest {
     }
 
     @Test
-    void fails_withLettersInSsn() {
-        RuleResult result = rule.apply(requestWithSsn("12345678A"));
+    void passes_withDashedSsn() {
+        RuleResult result = rule.apply(requestWithSsn("123-45-6789"));
+        assertThat(result.isPassed()).isTrue();
+    }
+
+    @Test
+    void passes_withSpacesInSsn() {
+        RuleResult result = rule.apply(requestWithSsn("123 45 6789"));
+        assertThat(result.isPassed()).isTrue();
+    }
+
+    @Test
+    void fails_withTooFewDigitsAfterStripping() {
+        RuleResult result = rule.apply(requestWithSsn("123-45-678"));
         assertThat(result.isPassed()).isFalse();
         assertThat(result.getMessage()).contains("9 digits");
     }
@@ -43,6 +55,34 @@ class SsnFormatRuleTest {
     }
 
     @Test
+    void passes_withMixedDashesAndSpaces() {
+        RuleResult result = rule.apply(requestWithSsn("123 -45-6789"));
+        assertThat(result.isPassed()).isTrue();
+    }
+
+    @Test
+    void fails_withOnlyFormattingCharacters() {
+        RuleResult result = rule.apply(requestWithSsn("---"));
+        assertThat(result.isPassed()).isFalse();
+        assertThat(result.getMessage()).contains("9 digits");
+    }
+
+    @Test
+    void fails_withLettersInSsn() {
+        RuleResult result = rule.apply(requestWithSsn("12345678A"));
+        assertThat(result.isPassed()).isFalse();
+        assertThat(result.getMessage()).contains("9 digits");
+    }
+
+    @Test
+    void fails_whenLettersMixedWithDigitsProduceNineDigitsAfterStripping() {
+        // "1A23456789" would pass if we stripped all non-digits (\D),
+        // but we only strip formatting chars so the letter is preserved and fails the digit-only pattern.
+        RuleResult result = rule.apply(requestWithSsn("1A23456789"));
+        assertThat(result.isPassed()).isFalse();
+    }
+
+    @Test
     void fails_withNullSsn() {
         ApplicationRequest request = ApplicationRequest.builder()
                 .studentInfo(StudentInfo.builder().build())
@@ -55,12 +95,6 @@ class SsnFormatRuleTest {
     @Test
     void fails_withNullStudentInfo() {
         RuleResult result = rule.apply(ApplicationRequest.builder().build());
-        assertThat(result.isPassed()).isFalse();
-    }
-
-    @Test
-    void fails_withDashesInSsn() {
-        RuleResult result = rule.apply(requestWithSsn("123-45-6789"));
         assertThat(result.isPassed()).isFalse();
     }
 

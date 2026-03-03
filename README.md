@@ -25,10 +25,10 @@ A Spring Boot service that validates FAFSA (Free Application for Federal Student
 
 # Single test class
 ./gradlew test --tests "com.gditTakeHome.fafsaEditProcessor.rules.StudentAgeRuleTest"
-```
 
-# Force test execution even if intputs/outputs haven't changed
+# Force test execution even if inputs/outputs haven't changed
 ./gradlew test --rerun-tasks
+```
 
 ## Run the Application
 
@@ -61,9 +61,9 @@ Validates a FAFSA application against all 7 edit rules.
 | `income.studentIncome` | decimal | yes | Cannot be negative |
 | `income.parentIncome` | decimal | conditional | Required if dependencyStatus is `"dependent"` |
 | `stateOfResidence` | string | yes | Valid 2-letter US state abbreviation |
-| `spouseInfo.firstName` | string | conditional | Required if maritalStatus is `"married"` |
-| `spouseInfo.lastName` | string | conditional | Required if maritalStatus is `"married"` |
-| `spouseInfo.ssn` | string | conditional | Required if maritalStatus is `"married"` |
+| `spouseInfo.firstName` | string | no | Accepted but not validated |
+| `spouseInfo.lastName` | string | no | Accepted but not validated |
+| `spouseInfo.ssn` | string | conditional | Required (non-blank) if maritalStatus is `"married"` |
 
 **Response** (`200 OK`):
 
@@ -72,8 +72,8 @@ Validates a FAFSA application against all 7 edit rules.
   "applicationStatus": "VALID" | "INVALID",
   "ruleResults": [
     {
-      "ruleId": "EDIT-001",
-      "ruleName": "Student Age",
+      "ruleId": "STUDENT_AGE",
+      "ruleName": "StudentAgeRule",
       "passed": true,
       "severity": "ERROR",
       "message": "Student age is valid (age: 22)."
@@ -152,8 +152,8 @@ Expected response (abbreviated):
 {
   "applicationStatus": "INVALID",
   "ruleResults": [
-    { "ruleId": "EDIT-001", "ruleName": "Student Age", "passed": false, ... },
-    { "ruleId": "EDIT-002", "ruleName": "SSN Format", "passed": false, ... },
+    { "ruleId": "STUDENT_AGE", "ruleName": "StudentAgeRule", "passed": false, ... },
+    { "ruleId": "SSN_FORMAT", "ruleName": "SsnFormatRule", "passed": false, ... },
     ...
   ]
 }
@@ -163,12 +163,12 @@ Expected response (abbreviated):
 
 ## The 7 Edit Rules
 
-| Rule ID | Name | Condition |
+| Rule ID | Class | Condition |
 |---|---|---|
-| EDIT-001 | Student Age | Must be ≥ 14 years old |
-| EDIT-002 | SSN Format | Must be exactly 9 digits |
-| EDIT-003 | Dependent Parent Income | If `dependencyStatus == "dependent"`, `parentIncome` is required |
-| EDIT-004 | Income Validation | `studentIncome` and `parentIncome` (if present) cannot be negative |
-| EDIT-005 | Household Logic | `numberInCollege` ≤ `numberInHousehold` |
-| EDIT-006 | State Code | Must be a valid US state abbreviation (including DC) |
-| EDIT-007 | Marital Status | If `maritalStatus == "married"`, spouse info (name + SSN) is required |
+| `STUDENT_AGE` | `StudentAgeRule` | Must be ≥ 14 and ≤ 120 years old; DOB cannot be a future date |
+| `SSN_FORMAT` | `SsnFormatRule` | Must contain exactly 9 digits (dashes and spaces are stripped before check) |
+| `DEPENDENT_PARENT_INCOME` | `DependentParentIncomeRule` | If `dependencyStatus == "dependent"`, `parentIncome` is required |
+| `INCOME_VALIDATION` | `IncomeValidationRule` | `studentIncome` and `parentIncome` (if present) cannot be negative |
+| `HOUSEHOLD_LOGIC` | `HouseholdLogicRule` | `numberInCollege` ≤ `numberInHousehold`; both must be non-negative |
+| `STATE_CODE` | `StateCodeRule` | Must be a valid 2-letter US state, DC, or territory abbreviation |
+| `MARITAL_STATUS` | `MaritalStatusRule` | If `maritalStatus == "married"`, spouse SSN is required |

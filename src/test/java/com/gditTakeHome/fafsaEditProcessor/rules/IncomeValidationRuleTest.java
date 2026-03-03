@@ -58,6 +58,30 @@ class IncomeValidationRuleTest {
         assertThat(result.getMessage()).contains("required");
     }
 
+    @Test
+    void fails_whenIncomeObjectIsNull() {
+        ApplicationRequest request = ApplicationRequest.builder().build();
+        RuleResult result = rule.apply(request);
+        assertThat(result.isPassed()).isFalse();
+        assertThat(result.getMessage()).contains("required");
+    }
+
+    @Test
+    void passes_withVeryLargeIncomeValues() {
+        RuleResult result = rule.apply(requestWithIncome(
+                new BigDecimal("9999999999999.99"),
+                new BigDecimal("9999999999999.99")));
+        assertThat(result.isPassed()).isTrue();
+    }
+
+    @Test
+    void passes_withDecimalIncomeValues() {
+        RuleResult result = rule.apply(requestWithIncome(
+                new BigDecimal("1234.56"),
+                new BigDecimal("78901.23")));
+        assertThat(result.isPassed()).isTrue();
+    }
+
     private ApplicationRequest requestWithIncome(BigDecimal studentIncome, BigDecimal parentIncome) {
         return ApplicationRequest.builder()
                 .income(Income.builder()

@@ -29,6 +29,20 @@ class StateCodeRuleTest {
     }
 
     @Test
+    void passes_withTerritoryCodes() {
+        for (String code : new String[]{"PR", "VI", "GU", "AS", "MP"}) {
+            RuleResult result = rule.apply(requestWithState(code));
+            assertThat(result.isPassed()).as("Expected territory code %s to pass", code).isTrue();
+        }
+    }
+
+    @Test
+    void passes_withLeadingAndTrailingWhitespace() {
+        RuleResult result = rule.apply(requestWithState("  CA  "));
+        assertThat(result.isPassed()).isTrue();
+    }
+
+    @Test
     void fails_withInvalidStateCode() {
         RuleResult result = rule.apply(requestWithState("XX"));
         assertThat(result.isPassed()).isFalse();

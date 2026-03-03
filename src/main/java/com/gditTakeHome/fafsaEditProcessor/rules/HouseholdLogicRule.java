@@ -7,12 +7,25 @@ import com.gditTakeHome.fafsaEditProcessor.model.EditRule;
 import com.gditTakeHome.fafsaEditProcessor.model.Severity;
 import org.springframework.stereotype.Component;
 
+/**
+ * Validates that household size and number of college students are logically consistent.
+ *
+ * <p>Both fields are required and must be non-negative. The number of students in college
+ * cannot exceed the total number of people in the household.
+ */
 @Component
 public class HouseholdLogicRule implements EditRule {
 
+    private static final String RULE_ID = "HOUSEHOLD_LOGIC";
+
+    private static final String MSG_REQUIRED = "Household size and number in college are required.";
+    private static final String MSG_NEGATIVE = "Household size and number in college must not be negative.";
+    private static final String MSG_INVALID = "Number in college (%d) cannot exceed number in household (%d).";
+    private static final String MSG_VALID = "Household figures are valid.";
+
     @Override
     public String getRuleId() {
-        return "HOUSEHOLD_LOGIC";
+        return RULE_ID;
     }
 
     @Override
@@ -24,33 +37,29 @@ public class HouseholdLogicRule implements EditRule {
     public RuleResult apply(ApplicationRequest application) {
         Household household = application.getHousehold();
 
-        if (household == null || household.getNumberInHousehold() == null || household.getNumberInCollege() == null) {
-            return RuleResult.builder()
-                    .ruleId(getRuleId())
-                    .ruleName("Household Logic")
-                    .passed(false)
-                    .severity(getSeverity())
-                    .message("Household size and number in college are required.")
-                    .build();
-        }
-
-        if (household.getNumberInCollege() <= household.getNumberInHousehold()) {
-            return RuleResult.builder()
-                    .ruleId(getRuleId())
-                    .ruleName("Household Logic")
-                    .passed(true)
-                    .severity(getSeverity())
-                    .message("Household figures are valid.")
-                    .build();
-        }
-
-        return RuleResult.builder()
+        RuleResult.RuleResultBuilder ruleResult = RuleResult.builder()
                 .ruleId(getRuleId())
-                .ruleName("Household Logic")
-                .passed(false)
-                .severity(getSeverity())
-                .message("Number in college (" + household.getNumberInCollege()
-                        + ") cannot exceed number in household (" + household.getNumberInHousehold() + ").")
-                .build();
+                .ruleName(getRuleName())
+                .severity(getSeverity());
+
+        // Required household fields are missing
+        if (household == null || household.getNumberInHousehold() == null || household.getNumberInCollege() == null) {
+            return ruleResult.passed(false).message(MSG_REQUIRED).build();
+        }
+
+        // Reject negative values — household counts cannot be negative
+        if (household.getNumberInHousehold() < 0 || household.getNumberInCollege() < 0) {
+            return ruleResult.passed(false).message(MSG_NEGATIVE).build();
+        }
+
+        // Number in college cannot exceed total household size
+        if (household.getNumberInCollege() > household.getNumberInHousehold()) {
+            return ruleResult.passed(false)
+                    .message(String.format(MSG_INVALID, household.getNumberInCollege(), household.getNumberInHousehold()))
+                    .build();
+        }
+
+        // Household figures are logically consistent
+        return ruleResult.passed(true).message(MSG_VALID).build();
     }
 }

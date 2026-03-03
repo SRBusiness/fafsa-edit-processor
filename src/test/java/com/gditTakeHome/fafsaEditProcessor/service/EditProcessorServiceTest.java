@@ -1,11 +1,6 @@
 package com.gditTakeHome.fafsaEditProcessor.service;
 
-import com.gditTakeHome.fafsaEditProcessor.dto.ApplicationRequest;
-import com.gditTakeHome.fafsaEditProcessor.dto.Household;
-import com.gditTakeHome.fafsaEditProcessor.dto.Income;
-import com.gditTakeHome.fafsaEditProcessor.dto.SpouseInfo;
-import com.gditTakeHome.fafsaEditProcessor.dto.StudentInfo;
-import com.gditTakeHome.fafsaEditProcessor.dto.ValidationResponse;
+import com.gditTakeHome.fafsaEditProcessor.dto.*;
 import com.gditTakeHome.fafsaEditProcessor.model.ApplicationStatus;
 import com.gditTakeHome.fafsaEditProcessor.rules.DependentParentIncomeRule;
 import com.gditTakeHome.fafsaEditProcessor.rules.HouseholdLogicRule;
@@ -18,8 +13,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
+
+import com.gditTakeHome.fafsaEditProcessor.model.DependencyStatus;
+import com.gditTakeHome.fafsaEditProcessor.model.MaritalStatus;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,7 +29,7 @@ class EditProcessorServiceTest {
     @BeforeEach
     void setUp() {
         service = new EditProcessorService(List.of(
-                new StudentAgeRule(),
+                new StudentAgeRule(Clock.systemDefaultZone()),
                 new SsnFormatRule(),
                 new DependentParentIncomeRule(),
                 new IncomeValidationRule(),
@@ -47,7 +46,7 @@ class EditProcessorServiceTest {
 
         assertThat(response.getApplicationStatus()).isEqualTo(ApplicationStatus.VALID);
         assertThat(response.getRuleResults()).hasSize(7);
-        assertThat(response.getRuleResults()).allMatch(r -> r.isPassed());
+        assertThat(response.getRuleResults()).allMatch(RuleResult::isPassed);
     }
 
     @Test
@@ -79,8 +78,8 @@ class EditProcessorServiceTest {
                         .ssn("INVALID")
                         .dateOfBirth(LocalDate.now().minusYears(10))
                         .build())
-                .dependencyStatus("dependent")
-                .maritalStatus("married")
+                .dependencyStatus(DependencyStatus.DEPENDENT)
+                .maritalStatus(MaritalStatus.MARRIED)
                 .household(Household.builder().numberInHousehold(2).numberInCollege(5).build())
                 .income(Income.builder().studentIncome(BigDecimal.valueOf(-100)).build())
                 .stateOfResidence("XX")
@@ -101,8 +100,8 @@ class EditProcessorServiceTest {
                         .ssn("123456789")
                         .dateOfBirth(LocalDate.of(2003, 5, 15))
                         .build())
-                .dependencyStatus("dependent")
-                .maritalStatus("single")
+                .dependencyStatus(DependencyStatus.DEPENDENT)
+                .maritalStatus(MaritalStatus.SINGLE)
                 .household(Household.builder().numberInHousehold(4).numberInCollege(1).build())
                 .income(Income.builder()
                         .studentIncome(BigDecimal.valueOf(5000))
