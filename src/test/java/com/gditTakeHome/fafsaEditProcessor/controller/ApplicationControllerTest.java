@@ -68,6 +68,63 @@ class ApplicationControllerTest {
     }
 
     @Test
+    void returns400_forMissingBody() throws Exception {
+        // A completely absent body is a distinct case from malformed JSON —
+        // both route through GlobalExceptionHandler but via different exception causes
+        mockMvc.perform(post("/api/applications/validate")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Invalid request body"));
+    }
+
+    @Test
+    void returns400_forMalformedJson() throws Exception {
+        mockMvc.perform(post("/api/applications/validate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{this is not valid json"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Invalid request body"))
+                .andExpect(jsonPath("$.message").value("Malformed JSON: could not parse request body."));
+    }
+
+    @Test
+    void returns400_forInvalidEnumValue() throws Exception {
+        String body = """
+                {
+                  "dependencyStatus": "blah",
+                  "maritalStatus": "single"
+                }
+                """;
+
+        mockMvc.perform(post("/api/applications/validate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Invalid request body"))
+                .andExpect(jsonPath("$.message").value(
+                        "Invalid value 'blah' for field 'dependencyStatus'. Accepted values: DEPENDENT, INDEPENDENT"));
+    }
+
+    @Test
+    void returns400_forInvalidDateFormat() throws Exception {
+        String body = """
+                {
+                  "studentInfo": {
+                    "dateOfBirth": "not-a-date"
+                  }
+                }
+                """;
+
+        mockMvc.perform(post("/api/applications/validate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Invalid request body"))
+                .andExpect(jsonPath("$.message").value(
+                        "Invalid value 'not-a-date' for field 'dateOfBirth'. Expected format: YYYY-MM-DD"));
+    }
+
+    @Test
     void returns200WithInvalidStatus_forInvalidApplication() throws Exception {
         ApplicationRequest request = ApplicationRequest.builder()
                 .studentInfo(StudentInfo.builder()

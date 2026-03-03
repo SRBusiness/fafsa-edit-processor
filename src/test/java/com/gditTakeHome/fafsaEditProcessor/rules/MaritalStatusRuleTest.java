@@ -62,6 +62,17 @@ class MaritalStatusRuleTest {
     }
 
     @Test
+    void fails_whenMarriedAndSpouseSsnIsBlank() {
+        // isBlank() catches empty strings — distinct from the null SSN case
+        ApplicationRequest request = ApplicationRequest.builder()
+                .maritalStatus(MaritalStatus.MARRIED)
+                .spouseInfo(SpouseInfo.builder().ssn("   ").build())
+                .build();
+        RuleResult result = rule.apply(request);
+        assertThat(result.isPassed()).isFalse();
+    }
+
+    @Test
     void passes_whenNullMaritalStatusAndNoSpouseInfo() {
         ApplicationRequest request = ApplicationRequest.builder().build();
         RuleResult result = rule.apply(request);

@@ -23,8 +23,14 @@ A Spring Boot service that validates FAFSA (Free Application for Federal Student
 # All tests
 ./gradlew test
 
-# Single test class
+# Single rule unit test class
 ./gradlew test --tests "com.gditTakeHome.fafsaEditProcessor.rules.StudentAgeRuleTest"
+
+# Service integration tests (all 7 rules wired together, no HTTP)
+./gradlew test --tests "com.gditTakeHome.fafsaEditProcessor.service.EditProcessorServiceTest"
+
+# Controller tests (full HTTP stack including parse error handling)
+./gradlew test --tests "com.gditTakeHome.fafsaEditProcessor.controller.ApplicationControllerTest"
 
 # Force test execution even if inputs/outputs haven't changed
 ./gradlew test --rerun-tasks
@@ -83,6 +89,22 @@ Validates a FAFSA application against all 7 edit rules.
 ```
 
 HTTP status is always `200 OK`. Business validity is communicated in `applicationStatus`.
+
+**Error response** (`400 Bad Request`):
+
+If the request body cannot be parsed (malformed JSON, unrecognized enum value, wrong date format), the service returns `400` with a normalized error body instead of running any rules:
+
+```json
+{
+  "error": "Invalid request body",
+  "message": "Invalid value 'blah' for field 'dependencyStatus'. Accepted values: DEPENDENT, INDEPENDENT"
+}
+```
+
+The `message` field describes the specific problem:
+- Invalid enum → lists the accepted values
+- Invalid date format → states the expected format (`YYYY-MM-DD`)
+- Malformed JSON → `"Malformed JSON: could not parse request body."`
 
 ---
 
@@ -156,6 +178,22 @@ Expected response (abbreviated):
     { "ruleId": "SSN_FORMAT", "ruleName": "SsnFormatRule", "passed": false, ... },
     ...
   ]
+}
+```
+
+### Parse error (invalid enum value)
+
+```bash
+curl -s -X POST http://localhost:8080/api/applications/validate \
+  -H "Content-Type: application/json" \
+  -d '{"dependencyStatus": "blah"}'
+```
+
+Expected response:
+```json
+{
+  "error": "Invalid request body",
+  "message": "Invalid value 'blah' for field 'dependencyStatus'. Accepted values: DEPENDENT, INDEPENDENT"
 }
 ```
 

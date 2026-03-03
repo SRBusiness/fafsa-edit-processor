@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 import com.gditTakeHome.fafsaEditProcessor.model.DependencyStatus;
@@ -24,12 +25,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class EditProcessorServiceTest {
 
+    // Fixed clock keeps age calculations deterministic — same pattern as StudentAgeRuleTest
+    private static final LocalDate FIXED_TODAY = LocalDate.of(2024, 6, 15);
+    private static final Clock FIXED_CLOCK =
+            Clock.fixed(FIXED_TODAY.atStartOfDay(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
+
     private EditProcessorService service;
 
     @BeforeEach
     void setUp() {
         service = new EditProcessorService(List.of(
-                new StudentAgeRule(Clock.systemDefaultZone()),
+                new StudentAgeRule(FIXED_CLOCK),
                 new SsnFormatRule(),
                 new DependentParentIncomeRule(),
                 new IncomeValidationRule(),
@@ -52,7 +58,7 @@ class EditProcessorServiceTest {
     @Test
     void returnsInvalid_whenStudentIsTooYoung() {
         ApplicationRequest request = validRequest();
-        request.getStudentInfo().setDateOfBirth(LocalDate.now().minusYears(10));
+        request.getStudentInfo().setDateOfBirth(FIXED_TODAY.minusYears(10));
 
         ValidationResponse response = service.process(request);
 
@@ -76,7 +82,7 @@ class EditProcessorServiceTest {
         ApplicationRequest request = ApplicationRequest.builder()
                 .studentInfo(StudentInfo.builder()
                         .ssn("INVALID")
-                        .dateOfBirth(LocalDate.now().minusYears(10))
+                        .dateOfBirth(FIXED_TODAY.minusYears(10))
                         .build())
                 .dependencyStatus(DependencyStatus.DEPENDENT)
                 .maritalStatus(MaritalStatus.MARRIED)
