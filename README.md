@@ -15,6 +15,8 @@ A Spring Boot service that validates FAFSA (Free Application for Federal Student
 
 ```bash
 ./gradlew build
+
+./gradlew clean build
 ```
 
 ## Run Tests

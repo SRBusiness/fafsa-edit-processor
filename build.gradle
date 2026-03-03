@@ -6,7 +6,7 @@ plugins {
 
 group = 'com.gditTakeHome'
 version = '0.0.1-SNAPSHOT'
-description = 'GDIT takehome technical assignment  '
+description = 'GDIT takehome technical assignment'
 
 java {
 	toolchain {
